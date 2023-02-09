@@ -1,2 +1,2 @@
-# NanoGPT
-A small-scale implementation of OpenAI's GPT models.
+# MyGPT
+A small implementation of a few different language models.
