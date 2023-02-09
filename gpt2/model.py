@@ -6,14 +6,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-def new_gelu(x):
-    """
-    Implementation of the GELU activation function currently in Google BERT repo (identical to OpenAI GPT).
-    Reference: Gaussian Error Linear Units (GELU) paper: https://arxiv.org/abs/1606.08415
-    """
-    return 0.5 * x * (1.0 + torch.tanh(math.sqrt(2.0 / math.pi) * (x + 0.044715 * torch.pow(x, 3.0))))
-
-
 class LayerNorm(nn.Module):
     """LayerNorm with optional bias parameter"""
     def __init__(self, ndim: int, bias: bool) -> None:
@@ -31,6 +23,7 @@ class CausalSelfAttention(nn.Module):
         embed_dim = config["embed_dim"]
         bias = config["sa_bias"]
         dropout = config["sa_dropout"]
+        block_size = config["block_size"]
 
         self.n_heads = config["n_heads"]
         self.embed_dim = embed_dim
@@ -45,7 +38,7 @@ class CausalSelfAttention(nn.Module):
         self.resid_dropout = nn.Dropout(dropout)
 
         # Buffer for masked attention
-        self.register_buffer("bias", torch.tril(torch.ones(config.block_size, config.block_size)).view(1, 1, config.block_size, config.block_size))
+        self.register_buffer("bias", torch.tril(torch.ones(block_size, block_size)).view(1, 1, block_size, block_size))
 
     def forward(self, x0: torch.Tensor):
         B, T, C = x0.shape
@@ -81,7 +74,7 @@ class MLP(nn.Module):
 
     def forward(self, x0: torch.Tensor):
         x = self.fc(x0)
-        x = new_gelu(x)
+        x = F.gelu(x, approximate="tanh")
         x = self.proj(x)
         x = self.dropout(x)
         return x
@@ -129,7 +122,7 @@ class GPT(nn.Module):
         # Apply scaled initialization, per GPT-2 paper
         for pn, p in self.named_parameters():
             if pn.endswith('proj.weight'):
-                torch.nn.init.normal_(p, mean=0.0, std=0.02/math.sqrt(2 * config.n_layer))
+                torch.nn.init.normal_(p, mean=0.0, std=0.02/math.sqrt(2 * config["n_layers"]))
 
     def forward(self, x0: torch.Tensor, targets: torch.Tensor = None):
         device = x0.device
@@ -152,7 +145,7 @@ class GPT(nn.Module):
         x = self.transformer.ln_f(x)
 
         # Compute loss if targets are provided
-        if targets:
+        if targets is not None:
             logits = self.lm_head(x)
             loss = F.cross_entropy(logits.view(-1, logits.shape[-1]), targets.view(-1), ignore_index=-1)
         else:
