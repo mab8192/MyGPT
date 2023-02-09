@@ -12,12 +12,12 @@ block_size = 256
 batch_size = 64
 learning_rate = 6e-4
 max_iters = 3000
-eval_iters = 50
-eval_every = 300
+eval_iters = 50  # Number of iterations to estimate loss
+eval_every = 300  # How often to estimate loss
 
-embed_dim = 384
-n_heads = 6
-n_layers = 6
+embed_dim = 256
+n_heads = 4
+n_layers = 4
 dropout = 0.2
 
 # ----- Load and prepare data -----
@@ -89,7 +89,7 @@ for step in range(max_iters):
     if (step + 1) % eval_every == 0:
         losses = estimate_loss()
         print(f"Epoch {step+1}: train {losses['train']} val {losses['val']}")
-        torch.save(model.parameters(), f"gpt2_{step+1}.pth")
+        torch.save(model.state_dict(), f"gpt2_{step+1}.pth")
 
     logits, loss = model(xb.to(device), yb.to(device))
     optimizer.zero_grad()
