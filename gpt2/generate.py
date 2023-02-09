@@ -17,12 +17,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     block_size = 256
-    embed_dim = 256
-    n_heads = 4
-    n_layers = 4
+    embed_dim = 384
+    n_heads = 6
+    n_layers = 6
     dropout = 0.2
 
-    with open("../datasets/shakespeare.txt") as f:
+    with open("../datasets/starwars.txt") as f:
         text = f.read()
 
     chars = sorted(list(set(text)))
@@ -50,6 +50,7 @@ if __name__ == "__main__":
 
     model = GPT(model_config)
     model.load_state_dict(torch.load(args.model))
+    model.eval()
 
     while True:
         prompt = input("Enter a prompt: ")

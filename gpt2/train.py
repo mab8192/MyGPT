@@ -15,14 +15,14 @@ max_iters = 3000
 eval_iters = 50  # Number of iterations to estimate loss
 eval_every = 300  # How often to estimate loss
 
-embed_dim = 256
-n_heads = 4
-n_layers = 4
+embed_dim = 384
+n_heads = 6
+n_layers = 6
 dropout = 0.2
 
 # ----- Load and prepare data -----
 print("Loading dataset...")
-with open("../datasets/shakespeare.txt") as f:
+with open("../datasets/starwars.txt") as f:
     text = f.read()
 
 chars = sorted(list(set(text)))
